@@ -10,5 +10,5 @@
  <autodiscovery>0</autodiscovery>
  <encryption>0</encryption>
  <receptionPolicy>both</receptionPolicy>
- <authorityUrl>http://talkback.stanford.edu/request.php</authorityUrl>
+ <authorityUrl>https://talkback.stanford.edu</authorityUrl>
 </config>
