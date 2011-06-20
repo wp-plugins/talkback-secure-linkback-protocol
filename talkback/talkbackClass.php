@@ -2,7 +2,7 @@
 
 /* !
  * TalkBack client side Library.
- * @Author: Elie Bursztein (elie _AT_ cs.stanford.edu)
+ * @Author: Elie Bursztein (elie _AT_ cs.stanford.edu), Baptiste Gourdin (bgourdin _AT_ cs.stanford.edu)
  * @version: 1.0
  * @url: http://talkback.stanford.edu
  * @Licence: LGPL
@@ -15,7 +15,7 @@ class TalkBack
 //!internal variables
 
   protected $path, $debug, $receptionPolicy, $encryption, $logPath;
-  protected $privKey, $pubKey, $randString, $authPubKey, $authorityUrl;
+  protected $privKey, $pubKey, $randString, $authPubKey, $authorityUrl, $authorityRequestUrl;
   protected $hash, $seed, $nbToken, $config, $cryptoSuite, $rcvPubKey;
   protected $notification, $lastTb;
   public $lastError;
@@ -37,6 +37,7 @@ class TalkBack
     $this->logPath = $tbConfig['logDir'];
     $this->debug = $debug;
     $this->authorityUrl = $tbConfig['authorityUrl'];
+    $this->authorityRequestUrl = $tbConfig['authorityUrl'] . "/request.php";
     $this->cryptoSuite = "RSA-SHA1";
     $this->encryption = $tbConfig['encryption'];
     $this->receptionPolicy = $tbConfig['receptionPolicy'];
@@ -82,11 +83,8 @@ class TalkBack
   private function printDebug($str)
   {
     file_put_contents($this->logPath . "/errors.log", date("d/m/y : H:i:s", time()) . " : " . $str . "\n", FILE_APPEND);
-//    $this->lastError = $str;
     $this->lastError = "";
 
-//  if ($this->debug)
-//  print ($str);
     return FALSE;
   }
 
@@ -102,6 +100,11 @@ class TalkBack
    */
   public function keyGen()
   {
+      global $privKeyPath;
+      
+      if (isset($privKeyPath))
+        return TRUE;
+      
     $privKeyPath = sha1(mt_rand() . mt_rand());
 
 // Create the keypair
@@ -274,7 +277,7 @@ class TalkBack
     $this->notification['sender_signature'] = base64_encode($signature);
 
 //send the seed request to the authority.
-    if (($result = $this->postData($this->authorityUrl)) == FALSE)
+    if (($result = $this->postData($this->authorityRequestUrl)) == FALSE)
       return $this->printDebug("Error:getSeed: can't send seed request to the authority. Is there any firewall issue ?\n");
 
 
@@ -787,8 +790,8 @@ $ts = time();
       return $this->printDebug("Error:validateNotification: Unknown authority ?\n");
 
 //send the notification to the authority to validate it.
-    if (($result = $this->postData($authUrl)) == FALSE)
-      return $this->printDebug("Error:validateNotification: can't send notification to the authority. Is there any firewall issue ($authUrl)?\n");
+    if (($result = $this->postData($authUrl. "/request.php")) == FALSE)
+      return $this->printDebug("Error:validateNotification: can't send notification to the authority. Is there any firewall issue ($authUrl/request.php)?\n");
 
     $result = $this->getAuthorityResponse($result, base64_decode($this->notification['authority_key']), $msg);
     if (!$result)
@@ -1029,14 +1032,12 @@ $ts = time();
     $this->notification ["sender_signature"] = $signature;
     $this->notification ["action"] = "register";
 
-    $result = $this->postData($this->authorityUrl);
+    $result = $this->postData($this->authorityRequestUrl);
 
     $result = $this->getAuthorityResponse($result, $this->authPubKey, $msg);
     if (!$result)
       return FALSE;
 
-    if (!$result)
-      return FALSE;
     if (preg_match('/Error:(.+)/', $result, $matches)) {
       $this->lastError = "registration error (" . $matches[0] . ")";
       return FALSE;
@@ -1077,7 +1078,7 @@ $ts = time();
     $this->notification['token'] = base64_encode($token);
     $this->notification['action'] = "getRandomString";
 
-    $result = $this->postData($this->authorityUrl);
+    $result = $this->postData($this->authorityRequestUrl);
 
     if (preg_match("/([0-9]+) (.+)/", $result, $matches)) {
       switch ($matches[1]) {
@@ -1113,7 +1114,7 @@ $ts = time();
     if (!openssl_sign($toSign, $signature, $this->privKey))
       return $this->printDebug("Error:saveRandString: can't sign the data, did you load the private key ?\n");
     $this->notification ["sender_signature"] = $signature;
-    $result = $this->postData($this->authorityUrl);
+    $result = $this->postData($this->authorityRequestUrl);
 
     if (preg_match("/([0-9]+)(.+)/", $result, $matches)) {
       switch ($matches[1]) {
@@ -1630,11 +1631,6 @@ $ts = time();
         return TRUE;
     }
     return FALSE;
-  }
-
-  public function registerAuth()
-  {
-    file_put_contents($this->path . "/authorities", base64_encode($this->authorityUrl) . ";" . base64_encode($this->authPubKey) . "\n");
   }
 
   function encryptData(&$data, $pubKey)

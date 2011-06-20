@@ -4,8 +4,7 @@ $tbLogDir = dirname(__FILE__)."/log";
 
 $tbConfig = array (
         "tbDataDir" =>$tbDataDir,
-        "logDir" => $tbLogDir,
-        "blogDataDir" => $tbBlogDataDir
+        "logDir" => $tbLogDir
 );
 
 function loadConfig ()

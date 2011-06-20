@@ -1,13 +1,13 @@
 <?php
 /*
   Plugin Name: Talkback
-  Plugin URI: http://code.google.com/p/talkback-client
-  Description: TalkBack is a open-source secure LinkBack mechanism based on a public-key cryptography that aims at tackling the blog spam problem at its root: instead of detecting spam via the content analysis like Akismet, TalkBack prevents spammers from posting LinkBack notifications.
+  Plugin URI : http://talkback.stanford.edu
+  Description : Talkback is a secure linkback protocol, It will prevent your blog from linkback spam.
   Version: 1.0
-  Author: Elie Bursztein, Baptiste Gourdin
-  Author URI: http://code.google.com/p/talkback-client
+  Author: Elie Burstein, Baptiste Gourdin
+  License : LGPL
  */
- 
+
 require_once "talkbackClass.php";
 require_once "config.php";
 
@@ -52,7 +52,7 @@ function tb_admin_head()
   $tb = new TalkBack();
   if (!$tb->load()) {
 
-    if ($tbConfig['blogName'] != "") {
+  /*  if ($tbConfig['blogName'] != "") {
 
       function talkback_warning()
       {
@@ -62,7 +62,7 @@ function tb_admin_head()
 
       add_action('admin_notices', 'talkback_warning');
     } else {
-
+*/
       function talkback_warning()
       {
         echo "<div id='talkback-warning' class='updated fade'><p><strong>" .
@@ -73,7 +73,7 @@ function tb_admin_head()
 
       add_action('admin_notices', 'talkback_warning');
     }
-  }
+  //}
 }
 
 add_action('admin_head', 'tb_admin_head');
@@ -125,52 +125,46 @@ function tb_wp_head()
   function tb_register_blog($tb, $notRegistered)
   {
     global $tbConfig;
+        global $current_user;    
 
-    if (!$notRegistered) {
+/*    if (!$notRegistered) {
 ?>
       <h3>Talkback registration</h3><b>Thanks for registering, you will receive shortly an email with the confirmation link. Please click on it to complete the registration.</b>
 <?
-    } else {
+    } else*/ {        
       $tbConfig['blogName'] = get_bloginfo('name');
       $tbConfig['blogUrl'] = get_bloginfo('url');
       $tbConfig['pluginUrl'] = get_bloginfo('url') . "/wp-content/plugins/talkback";
+      $tbConfig['email'] = $current_user->user_email;
+      
+      saveConfig();
 ?>
       <h2>Talkback registration</h2>
       <div id="registerDiv">
         <div>Please fill the following field to continue.<br/><br/></div>
+            
+        <?php 
+        if ($tb->keyGen()) { 
 
-        <form name="registerForm" action=="<?=$tbConfig['AuthorityUrl']
-?>" method="POST">
-    <input type="hidden" name="pluginUrl" value="<?=get_bloginfo('url')
-?>/wp-content/plugins/talkback" />
-    <table class="form-table">
+      ?>
+      <form name="registerForm" >
+        <input type="hidden" name="pluginUrl" value="<?=htmlentities($tbConfig['pluginUrl'])?>"/>
+        <input type="hidden" name="pubKey" value="<?=base64_encode($tb->keyGetPub()) ?>"/>
+      <table class="form-table">
       <tr valign="top"><th scope="row"><label for="name">Blog&#39;s name :</label></th>
-        <td><?=$tbConfig['blogName']
-?><input type="hidden" name="name" value="<?=$tbConfig['blogName']
-?>"/></td></tr>
+        <td><input type="text" name="blogName" value="<?=htmlentities($tbConfig['blogName'])?>"/></td></tr>
       <tr><th  scope="row">Blog&#39;s url :</th>
-        <td><?=$tbConfig['blogUrl']
-?><input type="hidden" name="url"  value="<?=$tbConfig['blogUrl']
-?>"/></td></tr>
-      <tr><th scope="row">Password :</th>
-        <td><input type="password" name="password"/></td></tr>
-      <tr><th scope="row">Retype your password :</th>
-        <td><input type="password" name="passwordVerif"/></td></tr>
+        <td><input type="text" name="blogUrl" value="<?=htmlentities($tbConfig['blogUrl'])?>"/></td></tr>
       <tr><th scope="row">Email : </th>
-        <td><input type="text" name="email" class="regular-text"/></td></tr>
-      <tr><th scope="row">Keys : </th>
-        <td id="keysTd" >
-<?php if ($tb->keyGen()) { ?>
-                   <b>Your keys have been generated.</b>
-                   <input type="hidden" name="pubKey" value="<?=base64_encode($tb->keyGetPub()) ?>"/>
+        <td><input type="text" name="email" value="<?=htmlentities($tbConfig['email'])?>"/></td></tr>
+       <tr><th colspan="2"><input class="button-primary" type="button" value="Register" onclick="tbRegister('<?=$tbConfig['authorityUrl']?>')" /></th></tr>
+       </table>
+       </form>
+                   
 <?php } else { ?>
                    <br/><b>Your keys couldn&#39;t been generated.</b>
                    <input type="button" value="retry" onclick="window.location.reload();"/>
-<?php } ?>
-               </td></tr>
-             <tr><th colspan="2"><input class="button-primary" type="button" value="Register" onclick="tbRegister()" /></th></tr>
-           </table>
-         </form>
+<?php } ?> 
        </div>
 <?php
                }
@@ -183,6 +177,7 @@ function tb_wp_head()
              function tb_configuration()
              {
                global $tbConfig;
+           
 
                echo '<div class="wrap">';
                $tb = new TalkBack();
@@ -240,10 +235,10 @@ function tb_wp_head()
           <input type="checkbox" name="enableAutodiscovery" <?=$ADcheck ?> onchange="tbUpdateConfig();"> Enable Autodiscovery.<br/><br/>
         </td></tr>
 
-      <tr class="tbSettingsTitle"><td><b>Queuing</b></td></tr>
+      <!--tr class="tbSettingsTitle"><td><b>Queuing</b></td></tr>
       <tr><td>
           <input type="checkbox" name="enableQueuing" <?=$QUcheck ?> onchange="tbUpdateConfig();"> Enable Queuing.<br/><br/>
-        </td></tr>
+        </td></tr-->
 
       <tr class="tbSettingsTitle"><td ><b>Encryption</b></td></tr>
       <tr><td>
@@ -441,7 +436,7 @@ function tb_wp_head()
         'comment_author_email' => '',
         'comment_author_url' => $url,
         'comment_content' => $excerpt,
-        'comment_type' => 'talkback',
+        'comment_type' => '', // XXX Need to allow a new type for trackbacks
         'comment_parent' => 0,
         'user_id' => '',
         'comment_author_IP' => '',
