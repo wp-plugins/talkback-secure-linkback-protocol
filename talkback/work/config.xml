@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config>
+ <blogName></blogName>
+ <blogUrl></blogUrl>
+ <pluginUrl></pluginUrl>
+ <email></email>
+ <debug>0</debug>
+ <WLonly>0</WLonly>
+ <queuing>0</queuing>
+ <autodiscovery>0</autodiscovery>
+ <encryption>0</encryption>
+ <receptionPolicy>both</receptionPolicy>
+ <authorityUrl>https://talkback.stanford.edu</authorityUrl>
+</config>
