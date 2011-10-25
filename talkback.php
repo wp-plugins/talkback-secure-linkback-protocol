@@ -19,7 +19,7 @@ require_once "config.php";
 function tb_admin_head()
 {
   global $tbConfig;
-  $tbConfig['pluginUrl'] = get_bloginfo('url') . "/wp-content/plugins/talkback";
+  $tbConfig['pluginUrl'] = get_bloginfo('url') . "/wp-content/plugins/talkback-secure-linkback-protocol";
   $tbPluginUrl = $tbConfig['pluginUrl'];
 ?>
   <script type="text/javascript">var tbPluginUrl = '<?=$tbPluginUrl
@@ -134,7 +134,7 @@ function tb_wp_head()
     } else*/ {        
       $tbConfig['blogName'] = get_bloginfo('name');
       $tbConfig['blogUrl'] = get_bloginfo('url');
-      $tbConfig['pluginUrl'] = get_bloginfo('url') . "/wp-content/plugins/talkback";
+      $tbConfig['pluginUrl'] = get_bloginfo('url') . "/wp-content/plugins/talkback-secure-linkback-protocol";
       $tbConfig['email'] = $current_user->user_email;
       
       saveConfig();

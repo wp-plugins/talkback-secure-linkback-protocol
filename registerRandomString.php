@@ -25,8 +25,10 @@ if (isset($_GET['token']))
 
   $tb = new TalkBack();
   if (!$tb->load(TRUE, FALSE))
-    die ("Error : Cannot load talkback plugin");
+    die ("Error : Cannot load talkback plugin (".htmlentities($tb->lastError).")");
   if ($tb->saveRandString($_GET['token']))
      echo '<script type="text/javascript">success(5);</script>';
+  else
+    die (htmlentities($tb->lastError));
 }
 ?>

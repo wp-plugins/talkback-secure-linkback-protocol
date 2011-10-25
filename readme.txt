@@ -2,8 +2,8 @@
 Contributors: baptiste.gourdin,ebursztein
 Tags: comments, spam, linkback, pingback, trackback
 Requires at least: 2.0.2
-Tested up to: 3.0
-Stable tag: 1.0
+Tested up to: 3.2.1
+Stable tag: 1.3.1
 
 TalkBack is a secure protocol for LinkBack notification designed to prevent the blogosphere from being spammed.
 
