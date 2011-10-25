@@ -77,13 +77,16 @@ class TalkBack
             || !($this->authPubKey = file_get_contents($this->path . "/authority-pub.key")))
       return $this->printDebug("Error:load Can't read the authority pub key\n ");
 
+    if (!function_exists("curl_init"))
+	return $this->printDebug("Error:function curl_init not defined. CURL module for php must be installed in order to use Talkback ");
+
     return TRUE;
   }
 
   private function printDebug($str)
   {
     file_put_contents($this->logPath . "/errors.log", date("d/m/y : H:i:s", time()) . " : " . $str . "\n", FILE_APPEND);
-    $this->lastError = "";
+    $this->lastError = $str;
 
     return FALSE;
   }
@@ -1086,21 +1089,17 @@ $ts = time();
           echo "Token error, please ask for a new confirmation email" . $matches[2];
           return FALSE;
         case "503" :
-          echo "Authority error, please try later.";
-          return FALSE;
+          return ($this->printDebug("Authority error, please try later." . $result));
         case "200" :
           if (file_put_contents($this->path . "/randomString.txt", $matches[2]) == FALSE) {
-            echo "Can't store the random string key, please verify the right of the " . $this->path . " directory";
             return $this->printDebug("Error: Can't store the random string key (" . $this->path . "/randomString.txt)\n");
           }
           break;
         default:
-          echo "Authority error, please try later.";
-          return FALSE;
+          return $this->printDebug("Authority error, please try later. (Unknown authority code)");
       }
     } else {
-      echo "Authority error, please try later. ";
-      return FALSE;
+	return $this->printDebug("Authority error, please try later. (Bad response format)");
     }
 
     $this->notification = array();
@@ -1119,18 +1118,17 @@ $ts = time();
     if (preg_match("/([0-9]+)(.+)/", $result, $matches)) {
       switch ($matches[1]) {
         case "403":
+	  return ($this->printDebug($matches[2]));
         case "503" :
-          echo "Authority error, please try later. " . $matches[2];
-          return FALSE;
+	  return ($this->printDebug("Authority error, please try later. (" . $matches[2] . ")" ));
         case "200" :
           return TRUE;
         default:
-          echo "Authority error, please try later. ";
-          return FALSE;
+          return $this->printDebug("Authority error, please try later. (Unknown authority code)");
       }
     }
-    echo "Authority error, please try later. ";
-    return FALSE;
+   else 
+  return $this->printDebug("Authority error, please try later. (Bad response format)");
   }
 
   /**
